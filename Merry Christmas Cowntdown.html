@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contagem do Natal</title>
+<style>
+/* Layout: tela única sem rolagem. Texto de abertura à esquerda, contagem em grade 2x2 à direita. Fundo: aurora, luzinhas, estrelas e neve. */
+:root {
+  --pine-deep: #04231a;
+  --pine: #0a3d2c;
+  --holly: #1f9a5f;
+  --berry: #c8283f;
+  --gold: #f6c978;
+  --snow: #f7fbf8;
+  --glass: rgba(255, 255, 255, 0.07);
+  --glass-edge: rgba(255, 255, 255, 0.22);
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: radial-gradient(120% 90% at 30% 20%, var(--pine) 0%, var(--pine-deep) 70%);
+  color: var(--snow);
+  font-family: var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: clamp(12px, 3vh, 32px);
+}
+
+/* ---------- Efeitos de fundo ---------- */
+.aurora { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+.aurora i {
+  position: absolute; border-radius: 50%; filter: blur(110px); opacity: .32;
+  mix-blend-mode: screen; will-change: transform;
+}
+.aurora i:nth-child(1) { width: 55vmax; height: 30vmax; left: -10vmax; top: -8vmax; background: var(--holly); animation: drift1 18s ease-in-out infinite alternate; }
+.aurora i:nth-child(2) { width: 40vmax; height: 28vmax; right: -8vmax; top: 10vh; background: var(--berry); opacity: .2; animation: drift2 22s ease-in-out infinite alternate; }
+.aurora i:nth-child(3) { width: 45vmax; height: 22vmax; left: 25vw; bottom: -10vmax; background: var(--gold); opacity: .12; animation: drift3 26s ease-in-out infinite alternate; }
+@keyframes drift1 { to { transform: translate(18vw, 10vh) scale(1.15); } }
+@keyframes drift2 { to { transform: translate(-14vw, 16vh) scale(1.2); } }
+@keyframes drift3 { to { transform: translate(-20vw, -8vh) scale(1.1); } }
+#fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45) 100%); }
+
+/* ---------- Conteúdo ---------- */
+.stage {
+  position: relative; z-index: 2; height: 100%;
+  display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; /* 25% | 50% livre | 25% */
+  gap: 0;
+  padding: clamp(40px, 9vh, 110px) clamp(28px, 6vw, 110px) clamp(24px, 5vh, 60px) clamp(12px, 2.5vw, 44px);
+}
+.intro { min-width: 0; padding-right: clamp(8px, 1.5vw, 24px); container-type: inline-size; }
+.free { min-width: 0; }
+h1 {
+  font-family: var(--font-display); font-style: italic; font-weight: 800; color: var(--snow);
+  font-size: 19cqi; line-height: .98; letter-spacing: -.02em; padding-bottom: .08em;
+  text-shadow: 0 0 36px rgba(246, 201, 120, .35);
+}
+.ln { display: block; }
+.ln:nth-child(2) { color: #f3dfae; }
+.ch { display: inline-block; white-space: pre; animation: charIn .8s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i) * 55ms); }
+h1.out .ch { animation: charOut .5s ease-in both; animation-delay: calc(var(--i) * 18ms); }
+@keyframes charIn { from { opacity: 0; transform: translateY(.45em) rotate(5deg); filter: blur(10px); } to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes charOut { from { opacity: 1; transform: none; filter: blur(0); } to { opacity: 0; transform: translateY(-.35em); filter: blur(8px); } }
+.l { transition: opacity .35s ease; }
+.l.fade { opacity: 0; }
+.clock { display: flex; flex-direction: column; min-width: 0; justify-self: end; padding-left: clamp(8px, 1.5vw, 24px); }
+.row {
+  display: flex; align-items: baseline; justify-content: flex-start; gap: clamp(10px, 1.2vw, 18px);
+  padding: clamp(3px, 1vh, 10px) 0; border-bottom: 1px solid rgba(255, 255, 255, .16);
+}
+.row:first-child { border-top: 1px solid rgba(255, 255, 255, .16); }
+.n {
+  font-family: var(--font-display); font-style: italic; font-weight: 800;
+  font-size: clamp(2rem, min(3.4vw, 8vh), 3.8rem); line-height: 1; font-variant-numeric: tabular-nums;
+  color: var(--snow); text-shadow: 0 0 40px rgba(246, 201, 120, .25); min-width: 2.1ch; text-align: right;
+}
+.l { font-size: clamp(.65rem, .85vw, .8rem); font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+.row:last-of-type .n { color: var(--gold); }
+
+.party { display: none; }
+.party h2 { font-family: var(--font-display); font-style: italic; font-size: clamp(2.4rem, 4vw, 4.5rem); color: var(--gold); line-height: 1; }
+body.done .row { display: none; }
+body.done .party { display: block; }
+
+/* ---------- Celular ---------- */
+@media (max-width: 820px) {
+  .stage { grid-template-columns: 1fr; align-content: center; gap: clamp(14px, 4vh, 36px); padding: clamp(40px, 9vh, 90px) clamp(24px, 7vw, 48px) 24px; text-align: center; }
+  .free { display: none; }
+  .intro { padding-right: 0; }
+  .clock { padding-left: 0; justify-self: stretch; display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+  .row { flex-direction: column; align-items: center; gap: 2px; padding: clamp(6px, 2vh, 16px) 0; }
+  .row:nth-child(2) { border-top: 1px solid rgba(255,255,255,.16); }
+  .n { font-size: clamp(2.2rem, 11vw, 3.4rem); }
+  .l { font-size: .68rem; }
+  h1 { font-size: 11vw; }
+  .ln { display: inline-block; }
+}
+@media (prefers-reduced-motion: reduce) { .aurora i { animation: none; } }
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+
+<main class="stage">
+  <section class="intro">
+    <h1 id="title" aria-live="polite"></h1>
+  </section>
+
+  <div class="free" aria-hidden="true"></div>
+
+  <section class="clock" aria-label="Tempo restante para o Natal">
+    <div class="row"><span class="n" id="d">00</span><span class="l" data-k="d">Dias</span></div>
+    <div class="row"><span class="n" id="h">00</span><span class="l" data-k="h">Horas</span></div>
+    <div class="row"><span class="n" id="m">00</span><span class="l" data-k="m">Min</span></div>
+    <div class="row"><span class="n" id="s">00</span><span class="l" data-k="s">Seg</span></div>
+    <div class="party"><h2>Feliz Natal!</h2></div>
+  </section>
+</main>
+
+<script>
+(function () {
+  /* ---------- Contagem ---------- */
+  var now = new Date();
+  var year = now.getFullYear();
+  var target = new Date(year, 11, 25, 0, 0, 0);
+  var endOfDay = new Date(year, 11, 26, 0, 0, 0);
+  if (now >= endOfDay) { year += 1; target = new Date(year, 11, 25, 0, 0, 0); }
+
+
+  var els = { d: document.getElementById("d"), h: document.getElementById("h"), m: document.getElementById("m"), s: document.getElementById("s") };
+  var pad = function (n) { return n < 10 ? "0" + n : "" + n; };
+  function set(el, v) { if (el.textContent !== v) el.textContent = v; }
+  function update() {
+    var diff = target - new Date();
+    if (diff <= 0) {
+      document.body.classList.add("done");
+      return;
+    }
+    var sec = Math.floor(diff / 1000);
+    set(els.d, pad(Math.floor(sec / 86400)));
+    set(els.h, pad(Math.floor(sec % 86400 / 3600)));
+    set(els.m, pad(Math.floor(sec % 3600 / 60)));
+    set(els.s, pad(sec % 60));
+  }
+  update();
+  setInterval(update, 1000);
+
+  /* ---------- Idiomas: saudação e rótulos ---------- */
+  var langs = [
+    { lines: ["Feliz", "Natal"],     l: { d: "Dias", h: "Horas", m: "Min", s: "Seg" } },
+    { lines: ["Merry", "Christmas"], l: { d: "Days", h: "Hours", m: "Min", s: "Sec" } },
+    { lines: ["Feliz", "Navidad"],   l: { d: "Días", h: "Horas", m: "Min", s: "Seg" } }
+  ];
+  var h1 = document.getElementById("title");
+  var tags = document.querySelectorAll(".l");
+  var cur = 0, calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function render(i) {
+    var L = langs[i], n = 0, html = "";
+    L.lines.forEach(function (line, li) {
+      html += '<span class="ln">';
+      for (var c = 0; c < line.length; c++) html += '<span class="ch" style="--i:' + (n++) + '">' + line[c] + '</span>';
+      html += '</span>' + (li === 0 ? " " : "");
+    });
+    h1.innerHTML = html;
+    tags.forEach(function (el) { el.textContent = L.l[el.getAttribute("data-k")]; el.classList.remove("fade"); });
+  }
+  function next() {
+    h1.classList.add("out");
+    tags.forEach(function (el) { el.classList.add("fade"); });
+    setTimeout(function () {
+      cur = (cur + 1) % langs.length;
+      h1.classList.remove("out");
+      render(cur);
+    }, calm ? 0 : 850);
+  }
+  render(0);
+  setInterval(next, 5500);
+
+  /* ---------- Canvas: estrelas, neve e luzinhas ---------- */
+  var cv = document.getElementById("fx"), ctx = cv.getContext("2d");
+  var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var flakes = [], stars = [];
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var palette = ["#ff4d63", "#ffd36e", "#5ee6a0", "#7cc7ff", "#ffffff"];
+
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var nf = Math.round(Math.min(120, W * H / 9000));
+    flakes = [];
+    for (var i = 0; i < nf; i++) {
+      var z = Math.random();
+      flakes.push({ x: Math.random() * W, y: Math.random() * H, z: z, r: 0.8 + z * 3.2, vy: 0.2 + z * 0.7, ph: Math.random() * 6.28, sw: 0.3 + Math.random() * 0.8 });
+    }
+    stars = [];
+    for (var j = 0; j < 70; j++) stars.push({ x: Math.random() * W, y: Math.random() * H * 0.7, r: Math.random() * 1.2 + 0.2, ph: Math.random() * 6.28, sp: 0.5 + Math.random() * 1.5 });
+  }
+
+  function garland(t) {
+    // três cordões em curva (catenária simples) com lâmpadas piscando
+    var swags = 3, wire = "rgba(0,0,0,.55)";
+    var segW = W / swags, sag = Math.min(90, H * 0.11);
+    for (var s = 0; s < swags; s++) {
+      var x0 = s * segW, x1 = x0 + segW, y0 = -4, yb = 22;
+      ctx.beginPath();
+      for (var i = 0; i <= 40; i++) {
+        var u = i / 40, x = x0 + u * segW, y = y0 + yb + Math.sin(u * Math.PI) * sag;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.strokeStyle = wire; ctx.lineWidth = 2; ctx.stroke();
+      var bulbs = Math.max(6, Math.round(segW / 46));
+      for (var b = 1; b < bulbs; b++) {
+        var u2 = b / bulbs, bx = x0 + u2 * segW, by = y0 + yb + Math.sin(u2 * Math.PI) * sag;
+        var col = palette[(b + s * 2) % palette.length];
+        var tw = reduce ? 1 : 0.55 + 0.45 * Math.sin(t * 2.2 + b * 1.7 + s * 3);
+        var g = ctx.createRadialGradient(bx, by + 8, 0, bx, by + 8, 30);
+        g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.globalAlpha = 0.5 * tw; ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(bx, by + 8, 30, 0, 6.283); ctx.fill();
+        ctx.globalAlpha = 0.35 + 0.65 * tw; ctx.fillStyle = col;
+        ctx.beginPath(); ctx.ellipse(bx, by + 9, 4.2, 7, 0, 0, 6.283); ctx.fill();
+        ctx.globalAlpha = 1; ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(bx - 2.5, by + 1, 5, 3);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function frame(ms) {
+    var t = ms / 1000;
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i], a = reduce ? 0.6 : 0.25 + 0.5 * (0.5 + 0.5 * Math.sin(t * s.sp + s.ph));
+      ctx.globalAlpha = a; ctx.fillStyle = "#fff6dc";
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    garland(t);
+    for (var k = 0; k < flakes.length; k++) {
+      var f = flakes[k];
+      if (!reduce) {
+        f.y += f.vy;
+        f.x += Math.sin(t * f.sw + f.ph) * 0.4 * (0.4 + f.z) + 0.15;
+        if (f.y > H + 8) { f.y = -8; f.x = Math.random() * W; }
+        if (f.x > W + 8) f.x = -8;
+      }
+      ctx.globalAlpha = 0.35 + f.z * 0.6;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  window.addEventListener("resize", function () { resize(); if (reduce) frame(0); });
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
